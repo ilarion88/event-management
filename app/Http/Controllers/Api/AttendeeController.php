@@ -8,12 +8,21 @@ use App\Http\Traits\CanLoadRelationships;
 use App\Models\Attendee;
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class AttendeeController extends Controller
+class AttendeeController extends Controller implements HasMiddleware
 {
     use CanLoadRelationships;
 
     private array $relations = ['user'];
+
+      public static function middleware(): array
+    {
+        return [
+            new Middleware('auth:sanctum', except: ['index', 'show', 'update']),
+        ];
+    }
 
 
     public function index(Event $event)
@@ -51,8 +60,10 @@ class AttendeeController extends Controller
         //
     }
 
-    public function destroy(string $event, Attendee $attendee)
+    public function destroy(Event $event, Attendee $attendee)
     {
+        $this->authorize('delete-attendee', [$event, $attendee]);
+
         $attendee->delete();
 
         return response(status: 204);
